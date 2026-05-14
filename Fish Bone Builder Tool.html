@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fishbone Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;900&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:  #1A3A5C; --navy2: #122B45;
+    --teal:  #007E85; --teal2: #00A8B0;
+    --off:   #F4F7FA; --white: #FFFFFF;
+    --gray1: #E2EAF0; --gray2: #94A3B8; --gray3: #475569;
+    --green: #16A34A;
+    --c1: #007E85; --c2: #1A3A5C; --c3: #DC2626;
+    --c4: #D97706; --c5: #16A34A; --c6: #7C3AED;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--off); color: var(--navy);
+    padding: 1.25rem 1.5rem 2rem; line-height: 1.5;
+  }
+
+  /* Header */
+  .tool-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .tool-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem; font-weight: 900; color: var(--navy);
+  }
+  .tool-title span { color: var(--teal2); }
+  .reset-btn {
+    padding: 0.28rem 0.8rem; background: transparent;
+    border: 1.5px solid var(--gray1); border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--gray2); cursor: pointer; text-transform: uppercase;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--teal2); color: var(--teal); }
+
+  /* Problem bar */
+  .problem-row {
+    display: flex; align-items: flex-start; gap: 0.65rem;
+    background: var(--navy); border-radius: 7px;
+    padding: 0.7rem 0.9rem; margin-bottom: 1.25rem;
+  }
+  .prob-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--teal2); text-transform: uppercase;
+    white-space: nowrap; padding-top: 4px;
+  }
+  .prob-input {
+    flex: 1; background: transparent; border: none;
+    border-bottom: 1.5px solid rgba(255,255,255,0.2);
+    color: white; font-family: 'Barlow', sans-serif;
+    font-size: 0.88rem; padding: 0.1rem 0;
+    resize: none; min-height: 24px; overflow: hidden; outline: none;
+  }
+  .prob-input::placeholder { color: rgba(255,255,255,0.35); font-style: italic; }
+  .prob-input:focus { border-bottom-color: var(--teal2); }
+
+  /* 6M grid */
+  .categories-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem; margin-bottom: 1.25rem;
+  }
+  .cat-card {
+    background: white; border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(26,58,92,0.08);
+  }
+  .cat-header {
+    padding: 0.45rem 0.75rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.88rem; font-weight: 700; color: white;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .cat-count {
+    font-size: 0.7rem; background: rgba(255,255,255,0.2);
+    padding: 0.05rem 0.4rem; border-radius: 10px;
+    font-weight: 600;
+  }
+  .cat-body { padding: 0.6rem 0.75rem; }
+  .cause-list { list-style: none; margin-bottom: 0.5rem; min-height: 12px; }
+  .cause-item {
+    display: flex; align-items: flex-start; gap: 0.4rem;
+    padding: 0.22rem 0;
+    border-bottom: 1px solid var(--gray1);
+    font-size: 0.82rem; color: var(--gray3);
+  }
+  .cause-item:last-child { border-bottom: none; }
+  .cause-text { flex: 1; line-height: 1.35; }
+  .remove-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--gray2); font-size: 0.8rem; padding: 0;
+    flex-shrink: 0; line-height: 1; margin-top: 1px;
+    transition: color 0.15s;
+  }
+  .remove-btn:hover { color: #DC2626; }
+  .cause-input-row {
+    display: flex; gap: 0.4rem;
+  }
+  .cause-input {
+    flex: 1; padding: 0.3rem 0.5rem;
+    border: 1.5px solid var(--gray1); border-radius: 4px;
+    font-family: 'Barlow', sans-serif; font-size: 0.8rem; color: var(--navy);
+    background: var(--off); outline: none;
+    transition: border-color 0.15s;
+  }
+  .cause-input:focus { border-color: var(--teal2); background: white; }
+  .add-btn {
+    padding: 0.3rem 0.6rem;
+    border: none; border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; color: white;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+  .add-btn:hover { opacity: 0.85; }
+
+  /* Visual fishbone SVG area */
+  .fishbone-visual-wrap {
+    background: white; border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 6px rgba(26,58,92,0.08);
+    margin-bottom: 1rem;
+    overflow-x: auto;
+  }
+  .visual-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.72rem; font-weight: 700; color: var(--gray2);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  #fishbone-svg { width: 100%; min-width: 480px; display: block; }
+
+  /* Submit */
+  .submit-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.25rem; }
+  .submit-btn {
+    padding: 0.48rem 1.25rem; background: var(--teal); color: white; border: none;
+    border-radius: 5px; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.88rem; font-weight: 700; letter-spacing: 0.06em;
+    cursor: pointer; text-transform: uppercase; transition: background 0.15s, opacity 0.15s;
+  }
+  .submit-btn:hover { background: var(--teal2); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .submit-note { font-size: 0.74rem; color: var(--gray2); font-style: italic; }
+
+  /* Feedback */
+  .feedback-block {
+    border-radius: 6px; padding: 0.8rem 1rem; margin-top: 0.75rem;
+    display: none; font-size: 0.84rem;
+  }
+  .feedback-block.show { display: block; }
+  .feedback-block.good    { background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; }
+  .feedback-block.partial { background: #FFF7ED; border: 1px solid #FED7AA; color: #92400E; }
+  .fb-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="tool-header">
+  <div class="tool-title">Fishbone <span>Builder</span></div>
+  <button class="reset-btn" onclick="resetAll()">&#8635; Reset</button>
+</div>
+
+<div class="problem-row">
+  <div class="prob-label">Effect / Problem</div>
+  <textarea class="prob-input" id="prob-input" rows="1"
+    placeholder="Describe the problem or effect you are analyzing&#8230;"
+    oninput="autoExpand(this); renderSVG()"></textarea>
+</div>
+
+<div class="categories-grid" id="cat-grid"></div>
+
+<div class="fishbone-visual-wrap">
+  <div class="visual-label">&#9656; Live Diagram Preview</div>
+  <svg id="fishbone-svg" viewBox="0 0 640 280" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div class="submit-row">
+  <button class="submit-btn" id="submit-btn" onclick="submitDiagram()" disabled>Review My Diagram</button>
+  <span class="submit-note" id="submit-note">Add at least one cause to review</span>
+</div>
+<div class="feedback-block" id="feedback"></div>
+
+<script>
+  const CATS = [
+    { id:'man',         label:'Man',         color:'#007E85' },
+    { id:'machine',     label:'Machine',     color:'#1A3A5C' },
+    { id:'method',      label:'Method',      color:'#DC2626' },
+    { id:'material',    label:'Material',    color:'#D97706' },
+    { id:'measurement', label:'Measurement', color:'#16A34A' },
+    { id:'environment', label:'Environment', color:'#7C3AED' },
+  ];
+
+  const state = {};
+  CATS.forEach(c => { state[c.id] = []; });
+
+  function autoExpand(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
+  // ── Build category cards ───────────────────────────────────
+  function buildGrid() {
+    const grid = document.getElementById('cat-grid');
+    grid.innerHTML = '';
+    CATS.forEach(cat => {
+      const card = document.createElement('div');
+      card.className = 'cat-card';
+      card.innerHTML = `
+        <div class="cat-header" style="background:${cat.color}">
+          <span>${cat.label}</span>
+          <span class="cat-count" id="count-${cat.id}">0</span>
+        </div>
+        <div class="cat-body">
+          <ul class="cause-list" id="list-${cat.id}"></ul>
+          <div class="cause-input-row">
+            <input class="cause-input" id="inp-${cat.id}" type="text"
+              placeholder="Add a cause&#8230;"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addCause('${cat.id}');}">
+            <button class="add-btn" style="background:${cat.color}"
+              onclick="addCause('${cat.id}')">+ Add</button>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  function addCause(catId) {
+    const inp = document.getElementById('inp-' + catId);
+    const val = inp.value.trim();
+    if (!val) return;
+    state[catId].push(val);
+    inp.value = '';
+    renderList(catId);
+    renderSVG();
+    updateSubmit();
+  }
+
+  function removeCause(catId, idx) {
+    state[catId].splice(idx, 1);
+    renderList(catId);
+    renderSVG();
+    updateSubmit();
+  }
+
+  function renderList(catId) {
+    const ul = document.getElementById('list-' + catId);
+    const count = document.getElementById('count-' + catId);
+    ul.innerHTML = '';
+    state[catId].forEach((c, i) => {
+      const li = document.createElement('li');
+      li.className = 'cause-item';
+      li.innerHTML = `<span class="cause-text">${escHtml(c)}</span>
+        <button class="remove-btn" onclick="removeCause('${catId}',${i})" title="Remove">&#10005;</button>`;
+      ul.appendChild(li);
+    });
+    count.textContent = state[catId].length;
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── SVG fishbone renderer ──────────────────────────────────
+  function renderSVG() {
+    const svg = document.getElementById('fishbone-svg');
+    const W = 640, H = 280;
+    const spineY = H / 2;
+    const spineX1 = 60, spineX2 = 570;
+    const headX = 580, headW = 58, headH = 52;
+    const prob = document.getElementById('prob-input').value.trim() || 'Effect';
+
+    // Branch x positions for 3 top + 3 bottom categories
+    const topCats   = [CATS[0], CATS[1], CATS[2]];
+    const botCats   = [CATS[3], CATS[4], CATS[5]];
+    const branchXs  = [160, 300, 450];
+
+    let html = `
+      <!-- spine -->
+      <line x1="${spineX1}" y1="${spineY}" x2="${spineX2}" y2="${spineY}"
+        stroke="#1A3A5C" stroke-width="2.5"/>
+      <!-- arrowhead -->
+      <polygon points="${spineX2},${spineY} ${spineX2-8},${spineY-5} ${spineX2-8},${spineY+5}"
+        fill="#1A3A5C"/>
+      <!-- head box -->
+      <rect x="${headX - headW/2}" y="${spineY - headH/2}" width="${headW}" height="${headH}"
+        rx="4" fill="#DC2626"/>`;
+
+    // Wrap problem text
+    const probWords = prob.split(' ');
+    let probLines = [], cur = '';
+    probWords.forEach(w => {
+      if ((cur + ' ' + w).trim().length > 8 && cur) { probLines.push(cur); cur = w; }
+      else cur = (cur + ' ' + w).trim();
+    });
+    if (cur) probLines.push(cur);
+    probLines = probLines.slice(0, 3);
+    const lineH = 11;
+    const startY = spineY - ((probLines.length - 1) * lineH) / 2;
+    probLines.forEach((line, i) => {
+      html += `<text x="${headX}" y="${startY + i * lineH}" text-anchor="middle"
+        font-family="Barlow Condensed, sans-serif" font-size="9" font-weight="700"
+        fill="white">${escHtml(line)}</text>`;
+    });
+
+    // Draw branches
+    branchXs.forEach((bx, i) => {
+      const tc = topCats[i];
+      const bc = botCats[i];
+
+      // Top branch
+      html += `<line x1="${bx}" y1="${spineY - 70}" x2="${bx}" y2="${spineY}"
+        stroke="${tc.color}" stroke-width="2"/>`;
+      html += `<rect x="${bx - 32}" y="${spineY - 92}" width="64" height="22" rx="3" fill="${tc.color}"/>`;
+      html += `<text x="${bx}" y="${spineY - 77}" text-anchor="middle"
+        font-family="Barlow Condensed, sans-serif" font-size="9" font-weight="700"
+        fill="white">${escHtml(tc.label)}</text>`;
+
+      // Top causes
+      const tCauses = state[tc.id].slice(0, 3);
+      tCauses.forEach((cause, ci) => {
+        const cy = spineY - 70 + ci * 22;
+        const cx = bx - 38;
+        html += `<line x1="${cx + 36}" y1="${cy}" x2="${bx}" y2="${cy}"
+          stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>`;
+        const label = cause.length > 12 ? cause.slice(0, 11) + '…' : cause;
+        html += `<text x="${cx + 30}" y="${cy - 3}" text-anchor="end"
+          font-family="Barlow, sans-serif" font-size="7.5" fill="#475569">${escHtml(label)}</text>`;
+      });
+
+      // Bottom branch
+      html += `<line x1="${bx}" y1="${spineY}" x2="${bx}" y2="${spineY + 70}"
+        stroke="${bc.color}" stroke-width="2"/>`;
+      html += `<rect x="${bx - 36}" y="${spineY + 70}" width="72" height="22" rx="3" fill="${bc.color}"/>`;
+      html += `<text x="${bx}" y="${spineY + 85}" text-anchor="middle"
+        font-family="Barlow Condensed, sans-serif" font-size="9" font-weight="700"
+        fill="white">${escHtml(bc.label)}</text>`;
+
+      // Bottom causes
+      const bCauses = state[bc.id].slice(0, 3);
+      bCauses.forEach((cause, ci) => {
+        const cy = spineY + 70 - ci * 22;
+        const cx = bx + 4;
+        html += `<line x1="${bx}" y1="${cy}" x2="${cx + 32}" y2="${cy}"
+          stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>`;
+        const label = cause.length > 12 ? cause.slice(0, 11) + '…' : cause;
+        html += `<text x="${cx + 34}" y="${cy - 3}" text-anchor="start"
+          font-family="Barlow, sans-serif" font-size="7.5" fill="#475569">${escHtml(label)}</text>`;
+      });
+    });
+
+    svg.innerHTML = html;
+  }
+
+  function updateSubmit() {
+    const total = CATS.reduce((sum, c) => sum + state[c.id].length, 0);
+    const btn = document.getElementById('submit-btn');
+    const note = document.getElementById('submit-note');
+    btn.disabled = total < 1;
+    note.textContent = total < 1 ? 'Add at least one cause to review'
+      : total < 3 ? 'Try to add causes across multiple categories'
+      : 'Ready to review';
+  }
+
+  function submitDiagram() {
+    const total = CATS.reduce((sum, c) => sum + state[c.id].length, 0);
+    const covered = CATS.filter(c => state[c.id].length > 0).length;
+    const fb = document.getElementById('feedback');
+    if (covered >= 4 && total >= 5) {
+      fb.className = 'feedback-block show good';
+      fb.innerHTML = `<div class="fb-title">&#10004; Strong diagram &#8212; good coverage</div>
+        <div>You have causes in ${covered} of 6 categories with ${total} total entries. Review your diagram and ask: which category has the most causes? That is often where the root cause lives. From here, pick your top 2&#8211;3 causes and run a 5 Whys on each one.</div>`;
+    } else if (total >= 2) {
+      fb.className = 'feedback-block show partial';
+      fb.innerHTML = `<div class="fb-title">Good start &#8212; keep brainstorming</div>
+        <div>You have causes in ${covered} categor${covered===1?'y':'ies'}. Try to consider all 6 categories &#8212; even if a category seems unlikely, writing it down and ruling it out is part of the process. Teams that examine all 6 are less likely to miss the real cause.</div>`;
+    } else {
+      fb.className = 'feedback-block show partial';
+      fb.innerHTML = `<div class="fb-title">Add more causes to get useful feedback</div>
+        <div>Think about each category and ask: could this have contributed to the problem? Add at least one cause per relevant category before reviewing.</div>`;
+    }
+    fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function resetAll() {
+    CATS.forEach(c => { state[c.id] = []; renderList(c.id); });
+    document.getElementById('prob-input').value = '';
+    document.getElementById('prob-input').style.height = '';
+    renderSVG();
+    updateSubmit();
+    document.getElementById('feedback').classList.remove('show');
+  }
+
+  // Init
+  buildGrid();
+  renderSVG();
+</script>
+</body>
+</html>
