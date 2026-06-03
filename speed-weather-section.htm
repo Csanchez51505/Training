@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speed, Weather & Stopping Distance</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0d1f35;
+    --navy-mid: #122844;
+    --navy-light: #1a3a57;
+    --teal: #00a99d;
+    --teal-dark: #007f76;
+    --teal-glow: rgba(0,169,157,0.15);
+    --amber: #f59e0b;
+    --amber-glow: rgba(245,158,11,0.12);
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #7a9abf;
+    --border: #1e3a57;
+    --card: #0f2035;
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    padding: 32px 20px 48px;
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Section header */
+  .section-header {
+    margin-bottom: 32px;
+  }
+  .section-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .section-intro {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 600px;
+  }
+
+  /* ---- STOPPING DISTANCE SIMULATOR ---- */
+  .simulator {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .sim-header {
+    background: var(--navy-mid);
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sim-header-left h3 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .sim-header-left p {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .sim-speed-display {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--teal);
+    line-height: 1;
+  }
+  .sim-speed-display span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-left: 2px;
+  }
+
+  .sim-body {
+    padding: 22px;
+  }
+
+  /* Slider */
+  .slider-wrap {
+    margin-bottom: 24px;
+  }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--navy-light);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--teal);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px rgba(0,169,157,0.3);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 6px rgba(0,169,157,0.25);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--teal);
+    border: 3px solid #fff;
+    cursor: pointer;
+  }
+
+  /* Distance bars */
+  .dist-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .dist-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .dist-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    width: 90px;
+    flex-shrink: 0;
+  }
+  .dist-bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--navy-light);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .dist-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    min-width: 40px;
+  }
+  .dist-bar-fill.perception { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .dist-bar-fill.reaction   { background: linear-gradient(90deg, var(--amber), #fcd34d); }
+  .dist-bar-fill.braking    { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .dist-bar-fill.total      { background: linear-gradient(90deg, var(--teal-dark), var(--teal)); }
+
+  .dist-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  .dist-note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    padding: 10px 14px;
+    background: var(--navy-mid);
+    border-radius: 6px;
+    border-left: 3px solid var(--teal);
+  }
+  .dist-note strong { color: var(--teal); }
+
+  /* Condition toggle */
+  .condition-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .cond-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cond-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .cond-btn.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+  .cond-btn.wet.active { background: #3b82f6; border-color: #3b82f6; }
+  .cond-btn.night.active { background: #6366f1; border-color: #6366f1; }
+  .cond-btn.fog.active { background: #64748b; border-color: #64748b; }
+
+  .sim-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    margin-top: 18px;
+  }
+
+  /* ---- CONDITION CARDS ---- */
+  .conditions-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 14px;
+    margin-top: 8px;
+  }
+
+  .cond-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .cond-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .cond-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .cond-card.open  { border-color: var(--teal); }
+
+  .cond-card-top {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cond-icon {
+    font-size: 22px;
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .cond-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    flex: 1;
+  }
+  .cond-chevron {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.25s;
+  }
+  .cond-card.open .cond-chevron { transform: rotate(90deg); color: var(--teal); }
+
+  .cond-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+  .cond-card.open .cond-body { max-height: 200px; }
+
+  .cond-body-inner {
+    padding: 0 16px 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  .cond-what {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 8px;
+  }
+  .cond-action {
+    font-size: 12px;
+    color: var(--teal);
+    line-height: 1.55;
+    padding: 8px 10px;
+    background: var(--teal-glow);
+    border-radius: 6px;
+    border-left: 2px solid var(--teal);
+  }
+
+  /* Curves callout */
+  .curves-callout {
+    background: var(--amber-glow);
+    border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .curves-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .curves-content h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+  .curves-content p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+  .curves-content strong { color: #e2e8f0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Section Header -->
+  <div class="section-header">
+    <div class="section-eyebrow">Defensive Driving</div>
+    <div class="section-title">Speed, Weather & Stopping Distance</div>
+    <p class="section-intro">Posted speed limits assume dry pavement, good visibility, and light traffic. The safe speed in any condition is whatever lets you stop within the distance you can clearly see ahead.</p>
+  </div>
+
+  <!-- Stopping Distance Simulator -->
+  <div class="simulator">
+    <div class="sim-header">
+      <div class="sim-header-left">
+        <h3>Stopping Distance Simulator</h3>
+        <p>Drag the slider to see how speed affects each phase</p>
+      </div>
+      <div class="sim-speed-display" id="speedDisplay">25 <span>mph</span></div>
+    </div>
+    <div class="sim-body">
+
+      <div class="slider-wrap">
+        <div class="slider-labels"><span>10 mph</span><span>35 mph</span><span>65 mph</span></div>
+        <input type="range" id="speedSlider" min="10" max="65" value="25" step="1">
+      </div>
+
+      <div class="sim-label">Road condition</div>
+      <div class="condition-toggle" style="margin-bottom:18px">
+        <button class="cond-btn active" data-cond="dry" onclick="setCond(this,'dry')">☀️ Dry</button>
+        <button class="cond-btn wet" data-cond="wet" onclick="setCond(this,'wet')">🌧️ Wet</button>
+        <button class="cond-btn night" data-cond="night" onclick="setCond(this,'night')">🌙 Night</button>
+        <button class="cond-btn fog" data-cond="fog" onclick="setCond(this,'fog')">🌫️ Fog</button>
+      </div>
+
+      <div class="sim-label">Distance breakdown</div>
+      <div class="dist-bars">
+        <div class="dist-row">
+          <div class="dist-label">Perception</div>
+          <div class="dist-bar-track">
+            <div class="dist-bar-fill perception" id="barPerception">
+              <span class="dist-val" id="valPerception"></span>
+            </div>
+          </div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">Reaction</div>
+          <div class="dist-bar-track">
+            <div class="dist-bar-fill reaction" id="barReaction">
+              <span class="dist-val" id="valReaction"></span>
+            </div>
+          </div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label">Braking</div>
+          <div class="dist-bar-track">
+            <div class="dist-bar-fill braking" id="barBraking">
+              <span class="dist-val" id="valBraking"></span>
+            </div>
+          </div>
+        </div>
+        <div class="dist-row">
+          <div class="dist-label" style="color:#e2e8f0;font-weight:800">Total</div>
+          <div class="dist-bar-track">
+            <div class="dist-bar-fill total" id="barTotal">
+              <span class="dist-val" id="valTotal"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dist-note" id="distNote"></div>
+
+    </div>
+  </div>
+
+  <!-- Condition Cards -->
+  <div class="conditions-title">Conditions & What to Do</div>
+  <div class="cond-grid" id="condGrid"></div>
+
+  <!-- Curves Callout -->
+  <div class="curves-callout">
+    <div class="curves-icon">↩️</div>
+    <div class="curves-content">
+      <h4>Curves & Corners</h4>
+      <p><strong>Slow down before you enter a curve, not while you are in it.</strong> Braking mid-curve can break traction. Reduce speed on the approach, then accelerate gently through the turn to keep the vehicle settled and stable.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- CONDITIONS DATA ----
+const conditions = [
+  {
+    icon: '🌧️',
+    name: 'Rain',
+    what: 'The first few minutes are the most slippery as oil lifts off the road.',
+    action: 'Slow down, add following distance, avoid puddles.'
+  },
+  {
+    icon: '💧',
+    name: 'Hydroplaning',
+    what: 'Tires ride up on water and lose grip entirely.',
+    action: 'Ease off the accelerator, hold the wheel steady — do not brake hard.'
+  },
+  {
+    icon: '🌫️',
+    name: 'Fog',
+    what: 'High beams reflect back off fog and reduce visibility further.',
+    action: 'Use low beams only, slow down, increase following distance significantly.'
+  },
+  {
+    icon: '🌙',
+    name: 'Night',
+    what: 'You can only see as far as your headlights reach.',
+    action: 'Reduce speed to stay within that range; avoid staring at oncoming headlights.'
+  },
+  {
+    icon: '🌅',
+    name: 'Sun Glare',
+    what: 'Low sun can momentarily blind you and other drivers.',
+    action: 'Use the visor and sunglasses, slow down, increase following distance.'
+  },
+  {
+    icon: '🚧',
+    name: 'Work Zones',
+    what: 'Lanes shift unexpectedly, workers are present, and fines often double.',
+    action: 'Slow well before the zone, merge early, and expect sudden stops.'
+  }
+];
+
+// ---- BUILD CONDITION CARDS ----
+const grid = document.getElementById('condGrid');
+conditions.forEach((c, i) => {
+  const card = document.createElement('div');
+  card.className = 'cond-card';
+  card.innerHTML = `
+    <div class="cond-card-top" onclick="toggleCard(this.parentElement)">
+      <div class="cond-icon">${c.icon}</div>
+      <div class="cond-name">${c.name}</div>
+      <div class="cond-chevron">▶</div>
+    </div>
+    <div class="cond-body">
+      <div class="cond-body-inner">
+        <div class="cond-what">${c.what}</div>
+        <div class="cond-action">✓ ${c.action}</div>
+      </div>
+    </div>
+  `;
+  grid.appendChild(card);
+});
+
+function toggleCard(card) {
+  const wasOpen = card.classList.contains('open');
+  document.querySelectorAll('.cond-card.open').forEach(c => c.classList.remove('open'));
+  if (!wasOpen) card.classList.add('open');
+}
+
+// ---- STOPPING DISTANCE CALCULATOR ----
+// Perception: 1.5 sec, Reaction: 0.75 sec, Braking: v²/(2*g*μ)
+// μ (friction): dry=0.75, wet=0.45, night=0.70 (same road, reduced perception), fog=0.65
+const condMultipliers = {
+  dry:   { perception: 1.0, reaction: 1.0, braking: 1.0, note: null },
+  wet:   { perception: 1.0, reaction: 1.1, braking: 1.65, note: 'Wet pavement can nearly double your braking distance. Add extra following distance.' },
+  night: { perception: 1.4, reaction: 1.1, braking: 1.1,  note: 'At night, perception time increases because hazards appear later in your headlight range.' },
+  fog:   { perception: 1.8, reaction: 1.2, braking: 1.15, note: 'In fog, you may not see a stopped vehicle until you\'re dangerously close. Slow dramatically.' },
+};
+
+let currentCond = 'dry';
+
+function calcDistances(mph, cond) {
+  const m = condMultipliers[cond];
+  const fps = mph * 1.467;
+  const perc = Math.round(fps * 1.5 * m.perception);
+  const react = Math.round(fps * 0.75 * m.reaction);
+  // braking distance ft: v² / (30 * f), v in mph, f friction
+  const frictions = { dry: 0.75, wet: 0.45, night: 0.68, fog: 0.62 };
+  const brakeFt = Math.round((mph * mph) / (30 * frictions[cond]));
+  const total = perc + react + brakeFt;
+  return { perc, react, brakeFt, total };
+}
+
+function updateSim() {
+  const mph = parseInt(document.getElementById('speedSlider').value);
+  const d = calcDistances(mph, currentCond);
+  const max = calcDistances(65, 'fog').total;
+
+  document.getElementById('speedDisplay').innerHTML = `${mph} <span>mph</span>`;
+
+  setBar('barPerception', 'valPerception', d.perc, max);
+  setBar('barReaction',   'valReaction',   d.react, max);
+  setBar('barBraking',    'valBraking',    d.brakeFt, max);
+  setBar('barTotal',      'valTotal',      d.total, max);
+
+  const note = condMultipliers[currentCond].note;
+  const noteEl = document.getElementById('distNote');
+  if (note) {
+    noteEl.innerHTML = `<strong>⚠ ${currentCond.charAt(0).toUpperCase()+currentCond.slice(1)} condition:</strong> ${note}`;
+  } else {
+    noteEl.innerHTML = `<strong>Total stopping distance at ${mph} mph (dry):</strong> approximately <strong style="color:var(--teal)">${d.total} feet</strong> — about ${Math.round(d.total/18)} car lengths.`;
+  }
+}
+
+function setBar(barId, valId, val, max) {
+  const pct = Math.max(8, Math.round((val / max) * 100));
+  document.getElementById(barId).style.width = pct + '%';
+  document.getElementById(valId).textContent = val + ' ft';
+}
+
+function setCond(btn, cond) {
+  document.querySelectorAll('.cond-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCond = cond;
+  updateSim();
+}
+
+document.getElementById('speedSlider').addEventListener('input', updateSim);
+
+// Init
+updateSim();
+</script>
+</body>
+</html>
