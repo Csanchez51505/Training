@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIPDE in Action: The Green Light</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0d1f35;
+    --teal: #00a99d;
+    --teal-dark: #007f76;
+    --amber: #f59e0b;
+    --red: #dc2626;
+    --green: #16a34a;
+    --light: #f0f4f8;
+    --mid: #cbd5e1;
+    --text: #1e293b;
+    --card: #ffffff;
+  }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .scenario-wrap {
+    width: 100%;
+    max-width: 700px;
+    padding: 24px 20px 40px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .header .eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+
+  /* Progress track */
+  .progress-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .step-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+  .step-node .dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #1e3a52;
+    border: 2px solid #2d4f6e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: #4a6080;
+    transition: all 0.35s ease;
+    position: relative;
+    z-index: 2;
+  }
+  .step-node .label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #4a6080;
+    margin-top: 5px;
+    transition: color 0.35s ease;
+  }
+  .step-node.active .dot {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(0,169,157,0.25);
+  }
+  .step-node.active .label { color: var(--teal); }
+  .step-node.done .dot {
+    background: var(--teal-dark);
+    border-color: var(--teal-dark);
+    color: #fff;
+  }
+  .step-node.done .label { color: var(--teal-dark); }
+  .step-node.correct .dot {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  .step-node.incorrect .dot {
+    background: var(--red);
+    border-color: var(--red);
+  }
+
+  .connector {
+    flex: 1;
+    height: 2px;
+    background: #1e3a52;
+    margin-top: -22px;
+    transition: background 0.35s ease;
+    position: relative;
+    z-index: 0;
+  }
+  .connector.filled { background: var(--teal-dark); }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  .card.fade-out { opacity: 0; transform: translateY(8px); }
+  .card.fade-in  { opacity: 1; transform: translateY(0); }
+
+  .card-header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .step-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--teal);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .step-badge.amber { background: var(--amber); color: #1e293b; }
+  .step-badge.green { background: var(--green); }
+  .step-badge.red   { background: var(--red); }
+
+  .card-header h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--navy);
+    line-height: 1.1;
+  }
+
+  .card-body {
+    padding: 20px 22px;
+  }
+
+  /* Scene visual */
+  .scene-box {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--teal);
+    position: relative;
+    overflow: hidden;
+  }
+  .scene-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,169,157,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .scene-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .scene-text {
+    font-size: 14px;
+    color: #e2e8f0;
+    line-height: 1.6;
+  }
+
+  /* Content text */
+  .content-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+  .content-text {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.65;
+  }
+
+  /* Highlight pills */
+  .hazard-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .hazard-pill {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1.5px solid;
+  }
+  .hazard-pill.amber { border-color: var(--amber); color: var(--amber); background: rgba(245,158,11,0.08); }
+  .hazard-pill.teal  { border-color: var(--teal); color: var(--teal); background: rgba(0,169,157,0.08); }
+
+  /* Choice section */
+  .choice-intro {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+  .choice-intro strong { color: var(--navy); }
+
+  .choice-btn {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    text-align: left;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.4;
+  }
+  .choice-btn:hover {
+    border-color: var(--teal);
+    background: rgba(0,169,157,0.04);
+    transform: translateX(3px);
+  }
+  .choice-btn .choice-letter {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--teal);
+    min-width: 20px;
+    margin-top: 1px;
+  }
+  .choice-btn.selected-correct {
+    border-color: var(--green);
+    background: rgba(22,163,74,0.06);
+    pointer-events: none;
+  }
+  .choice-btn.selected-incorrect {
+    border-color: var(--red);
+    background: rgba(220,38,38,0.06);
+    pointer-events: none;
+  }
+  .choice-btn.dim { opacity: 0.4; pointer-events: none; }
+
+  /* Feedback box */
+  .feedback {
+    display: none;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .feedback.correct {
+    display: block;
+    background: rgba(22,163,74,0.08);
+    border: 1.5px solid rgba(22,163,74,0.3);
+    color: #15803d;
+  }
+  .feedback.incorrect {
+    display: block;
+    background: rgba(220,38,38,0.07);
+    border: 1.5px solid rgba(220,38,38,0.25);
+    color: #b91c1c;
+  }
+  .feedback .fb-head {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+
+  /* Outcome / execute */
+  .outcome-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .outcome-tile {
+    padding: 14px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+  .outcome-tile .tile-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .outcome-tile .tile-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .outcome-tile.good { border-color: rgba(22,163,74,0.3); }
+  .outcome-tile.good .tile-label { color: var(--green); }
+  .outcome-tile.bad  { border-color: rgba(220,38,38,0.25); }
+  .outcome-tile.bad  .tile-label { color: var(--red); }
+
+  /* Action buttons */
+  .action-row {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  .btn-primary {
+    padding: 12px 24px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-restart {
+    padding: 12px 20px;
+    background: transparent;
+    color: #64748b;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 7px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-restart:hover { border-color: #94a3b8; color: var(--text); }
+
+  /* Summary card */
+  .summary-banner {
+    text-align: center;
+    padding: 28px 22px;
+  }
+  .summary-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+  .summary-banner h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .summary-banner p {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .sipde-recap {
+    margin: 20px 0 0;
+    padding: 16px;
+    background: var(--navy);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .recap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .recap-letter {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--teal);
+    min-width: 16px;
+  }
+  .recap-text {
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.45;
+  }
+
+  /* Hidden by default */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="scenario-wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="eyebrow">Interactive Scenario</div>
+    <h1>SIPDE in Action</h1>
+    <p>Step through each phase of the SIPDE method as it applies in a real driving situation.</p>
+  </div>
+
+  <!-- Progress track -->
+  <div class="progress-track" id="progressTrack">
+    <div class="step-node active" id="node-0"><div class="dot">S</div><div class="label">Scan</div></div>
+    <div class="connector" id="con-0"></div>
+    <div class="step-node" id="node-1"><div class="dot">I</div><div class="label">Identify</div></div>
+    <div class="connector" id="con-1"></div>
+    <div class="step-node" id="node-2"><div class="dot">P</div><div class="label">Predict</div></div>
+    <div class="connector" id="con-2"></div>
+    <div class="step-node" id="node-3"><div class="dot">D</div><div class="label">Decide</div></div>
+    <div class="connector" id="con-3"></div>
+    <div class="step-node" id="node-4"><div class="dot">E</div><div class="label">Execute</div></div>
+  </div>
+
+  <!-- Card -->
+  <div class="card fade-in" id="mainCard">
+    <div id="stepContent"></div>
+  </div>
+
+</div>
+
+<script>
+const steps = [
+  {
+    id: 'scan',
+    badge: 'Step 1 of 5',
+    badgeClass: '',
+    title: 'Scan',
+    scene: 'You\'re driving on a four-lane road approaching a signalized intersection. Traffic is light. It\'s a clear afternoon.',
+    contentLabel: 'What you see',
+    content: 'A green light is visible two blocks ahead. A pedestrian is standing at the corner to the right, waiting near the crosswalk. A van is parked just before the intersection on the right side.',
+    extras: null,
+    choice: null,
+    nextLabel: 'Identify Hazards →',
+  },
+  {
+    id: 'identify',
+    badge: 'Step 2 of 5',
+    badgeClass: '',
+    title: 'Identify',
+    scene: 'You\'re now one block out. You take a closer look at what you scanned.',
+    contentLabel: 'What stands out',
+    content: 'The light has been green for a while — it\'s a "stale green," meaning it could turn yellow at any moment. The pedestrian is looking down at their phone. The parked van is blocking your view of anything approaching from the right.',
+    extras: [
+      { text: 'Stale green light', cls: 'amber' },
+      { text: 'Distracted pedestrian', cls: 'amber' },
+      { text: 'Blocked sightline (van)', cls: 'amber' },
+    ],
+    choice: null,
+    nextLabel: 'Predict What Could Happen →',
+  },
+  {
+    id: 'predict',
+    badge: 'Step 3 of 5',
+    badgeClass: '',
+    title: 'Predict',
+    scene: 'You\'re now approaching the intersection at your current speed. What could realistically happen in the next few seconds?',
+    contentLabel: 'Likely scenarios',
+    content: 'The light could turn yellow — or even red — by the time you reach the stop line. The pedestrian may step off the curb without looking up from their phone. A vehicle or cyclist could appear from behind the parked van with no warning.',
+    extras: [
+      { text: 'Yellow light ahead', cls: 'amber' },
+      { text: 'Pedestrian may enter road', cls: 'amber' },
+      { text: 'Hidden cross traffic', cls: 'amber' },
+    ],
+    choice: null,
+    nextLabel: 'Make a Decision →',
+  },
+  {
+    id: 'decide',
+    badge: 'Step 4 of 5 — Your Choice',
+    badgeClass: 'amber',
+    title: 'Decide',
+    scene: 'You\'ve scanned, identified, and predicted. Now you need to act. The intersection is approaching fast.',
+    contentLabel: null,
+    content: null,
+    extras: null,
+    choice: {
+      intro: 'Based on what you\'ve identified and predicted, what\'s the best course of action as you approach this intersection?',
+      options: [
+        { letter: 'A', text: 'Maintain your current speed. The light is green and you have the right of way.', correct: false },
+        { letter: 'B', text: 'Ease off the accelerator, cover the brake, and prepare to stop if conditions change.', correct: true },
+        { letter: 'C', text: 'Speed up to clear the intersection before the light changes.', correct: false },
+      ],
+      feedback: {
+        correct: 'That\'s the right call. Covering your brake puts you in a "ready position" — you cut your reaction time significantly and can respond to the pedestrian or a light change without hard braking or panic. Slowing also gives you more time to process what\'s behind that van.',
+        incorrect: 'That\'s a risky choice. A stale green light, a distracted pedestrian, and a blocked sightline are three simultaneous hazards. Right of way doesn\'t protect you from a pedestrian who steps off the curb — and speeding up compounds every one of those risks.',
+      },
+    },
+    nextLabel: 'See the Outcome →',
+  },
+  {
+    id: 'execute',
+    badge: 'Step 5 of 5',
+    badgeClass: 'green',
+    title: 'Execute',
+    scene: 'You ease off the gas and cover your brake. Here\'s what unfolds.',
+    contentLabel: null,
+    content: null,
+    extras: null,
+    choice: null,
+    outcomes: {
+      good: [
+        { label: 'What happened', text: 'The light turned yellow as you arrived. You stopped smoothly without hard braking.' },
+        { label: 'Pedestrian', text: 'They stepped off the curb mid-cycle. Because you were already slowing, you had ample time to react.' },
+      ],
+      bad: [
+        { label: 'If you had held speed', text: 'A hard brake at yellow — or a near-miss with the pedestrian entering the crosswalk.' },
+        { label: 'If you had sped up', text: 'Running a red light or striking a pedestrian who entered without looking.' },
+      ],
+    },
+    nextLabel: null,
+  },
+];
+
+let currentStep = 0;
+let choiceMade = false;
+let choiceCorrect = false;
+
+function getNode(i) { return document.getElementById('node-' + i); }
+function getCon(i)  { return document.getElementById('con-' + i); }
+
+function updateProgress(step, resultClass) {
+  for (let i = 0; i < 5; i++) {
+    const node = getNode(i);
+    node.classList.remove('active', 'done', 'correct', 'incorrect');
+    if (i < step) {
+      node.classList.add('done');
+    } else if (i === step) {
+      node.classList.add('active');
+      if (resultClass) node.classList.add(resultClass);
+    }
+  }
+  for (let i = 0; i < 4; i++) {
+    const con = getCon(i);
+    con.classList.toggle('filled', i < step);
+  }
+}
+
+function renderStep(stepIndex) {
+  const s = steps[stepIndex];
+  choiceMade = false;
+
+  let html = '';
+
+  // Card header
+  html += `<div class="card-header">
+    <span class="step-badge ${s.badgeClass}">${s.badge}</span>
+    <h2>${s.title}</h2>
+  </div>`;
+
+  html += `<div class="card-body">`;
+
+  // Scene box
+  html += `<div class="scene-box">
+    <div class="scene-label">🚗 The Situation</div>
+    <div class="scene-text">${s.scene}</div>
+  </div>`;
+
+  // Standard content
+  if (s.contentLabel) {
+    html += `<div class="content-label">${s.contentLabel}</div>`;
+    html += `<div class="content-text">${s.content}</div>`;
+  }
+
+  // Hazard pills
+  if (s.extras) {
+    html += `<div class="hazard-row">`;
+    s.extras.forEach(e => {
+      html += `<span class="hazard-pill ${e.cls}">${e.text}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  // Choice
+  if (s.choice) {
+    html += `<div class="choice-intro"><strong>Your decision:</strong> ${s.choice.intro}</div>`;
+    s.choice.options.forEach((opt, i) => {
+      html += `<button class="choice-btn" id="choiceBtn${i}" onclick="handleChoice(${i}, ${opt.correct})">
+        <span class="choice-letter">${opt.letter}</span>
+        <span>${opt.text}</span>
+      </button>`;
+    });
+    html += `<div class="feedback correct" id="feedbackCorrect">
+      <div class="fb-head">✓ Good call.</div>
+      ${s.choice.feedback.correct}
+    </div>`;
+    html += `<div class="feedback incorrect" id="feedbackIncorrect">
+      <div class="fb-head">✗ Not quite.</div>
+      ${s.choice.feedback.incorrect}
+    </div>`;
+  }
+
+  // Outcome grid
+  if (s.outcomes) {
+    html += `<div class="content-label">What unfolded</div>`;
+    html += `<div class="outcome-grid">`;
+    s.outcomes.good.forEach(o => {
+      html += `<div class="outcome-tile good">
+        <div class="tile-label">✓ ${o.label}</div>
+        <div class="tile-text">${o.text}</div>
+      </div>`;
+    });
+    s.outcomes.bad.forEach(o => {
+      html += `<div class="outcome-tile bad">
+        <div class="tile-label">✕ ${o.label}</div>
+        <div class="tile-text">${o.text}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Action row
+  html += `<div class="action-row">`;
+  if (stepIndex < steps.length - 1) {
+    const disabled = s.choice ? 'disabled' : '';
+    html += `<button class="btn-primary" id="nextBtn" onclick="nextStep()" ${disabled}>${s.nextLabel}</button>`;
+  } else {
+    // Final step: show summary button
+    html += `<button class="btn-primary" onclick="showSummary()">View SIPDE Summary</button>`;
+    html += `<button class="btn-restart" onclick="restart()">↺ Restart</button>`;
+  }
+  html += `</div>`;
+
+  html += `</div>`; // close card-body
+
+  const card = document.getElementById('mainCard');
+  card.classList.remove('fade-in');
+  card.classList.add('fade-out');
+  setTimeout(() => {
+    card.innerHTML = html;
+    card.classList.remove('fade-out');
+    card.classList.add('fade-in');
+    updateProgress(stepIndex);
+  }, 250);
+}
+
+function handleChoice(btnIndex, isCorrect) {
+  if (choiceMade) return;
+  choiceMade = true;
+  choiceCorrect = isCorrect;
+
+  const opts = document.querySelectorAll('.choice-btn');
+  opts.forEach((btn, i) => {
+    if (i === btnIndex) {
+      btn.classList.add(isCorrect ? 'selected-correct' : 'selected-incorrect');
+    } else {
+      btn.classList.add('dim');
+    }
+  });
+
+  document.getElementById(isCorrect ? 'feedbackCorrect' : 'feedbackIncorrect').style.display = 'block';
+
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn) nextBtn.removeAttribute('disabled');
+
+  // Update the decide node
+  getNode(3).classList.add(isCorrect ? 'correct' : 'incorrect');
+}
+
+function nextStep() {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    renderStep(currentStep);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function showSummary() {
+  const card = document.getElementById('mainCard');
+  card.classList.add('fade-out');
+  setTimeout(() => {
+    card.innerHTML = `
+      <div class="summary-banner">
+        <div class="summary-icon">🎯</div>
+        <h2>SIPDE Completed</h2>
+        <p>You've walked through all five steps of the SIPDE method using a real intersection scenario. Here's a quick recap of each step.</p>
+        <div class="sipde-recap">
+          <div class="recap-item"><span class="recap-letter">S</span><div class="recap-text"><strong style="color:#e2e8f0">Scan</strong><br>Continuously look ahead and around for potential hazards.</div></div>
+          <div class="recap-item"><span class="recap-letter">I</span><div class="recap-text"><strong style="color:#e2e8f0">Identify</strong><br>Pick out the specific hazards in what you scanned.</div></div>
+          <div class="recap-item"><span class="recap-letter">P</span><div class="recap-text"><strong style="color:#e2e8f0">Predict</strong><br>Anticipate what those hazards could do next.</div></div>
+          <div class="recap-item"><span class="recap-letter">D</span><div class="recap-text"><strong style="color:#e2e8f0">Decide</strong><br>Choose the safest course of action given what you predict.</div></div>
+          <div class="recap-item" style="grid-column:1/-1"><span class="recap-letter">E</span><div class="recap-text"><strong style="color:#e2e8f0">Execute</strong><br>Carry out your decision smoothly and confidently.</div></div>
+        </div>
+        <div class="action-row" style="justify-content:center">
+          <button class="btn-restart" onclick="restart()">↺ Try Again</button>
+        </div>
+      </div>
+    `;
+    card.classList.remove('fade-out');
+    card.classList.add('fade-in');
+    // Mark all nodes done
+    for (let i = 0; i < 5; i++) {
+      const node = getNode(i);
+      node.classList.remove('active','done','correct','incorrect');
+      node.classList.add(i === 3 && choiceCorrect ? 'correct' : i === 3 && !choiceCorrect ? 'incorrect' : 'done');
+    }
+    for (let i = 0; i < 4; i++) getCon(i).classList.add('filled');
+  }, 250);
+}
+
+function restart() {
+  currentStep = 0;
+  choiceMade = false;
+  choiceCorrect = false;
+  renderStep(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+renderStep(0);
+</script>
+</body>
+</html>
