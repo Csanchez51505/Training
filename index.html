@@ -28,7 +28,6 @@
       overflow-x: hidden;
     }
 
-    /* Background grid */
     body::before {
       content: '';
       position: fixed;
@@ -42,7 +41,6 @@
       z-index: 0;
     }
 
-    /* Glow blob */
     body::after {
       content: '';
       position: fixed;
@@ -64,7 +62,6 @@
       padding: 0 24px;
     }
 
-    /* Header */
     header {
       padding: 56px 0 48px;
       text-align: center;
@@ -107,14 +104,12 @@
       line-height: 1.6;
     }
 
-    /* Divider */
     .divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--border), transparent);
       margin: 8px 0 40px;
     }
 
-    /* Section label */
     .section-label {
       font-family: 'Syne', sans-serif;
       font-size: 11px;
@@ -125,7 +120,6 @@
       margin-bottom: 20px;
     }
 
-    /* Card grid */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -219,7 +213,6 @@
       color: var(--accent);
     }
 
-    /* Placeholder card */
     .card-placeholder {
       background: transparent;
       border: 1px dashed var(--border);
@@ -241,7 +234,6 @@
       opacity: 0.4;
     }
 
-    /* Footer */
     footer {
       border-top: 1px solid var(--border);
       padding: 24px 0;
@@ -250,7 +242,6 @@
       font-size: 0.78rem;
     }
 
-    /* Animate in */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -259,10 +250,11 @@
     header { animation: fadeUp 0.5s ease both; }
     .section-label { animation: fadeUp 0.5s 0.1s ease both; }
     .card:nth-child(1) { animation: fadeUp 0.5s 0.15s ease both; }
-    .card:nth-child(2) { animation: fadeUp 0.5s 0.2s ease both; }
+    .card:nth-child(2) { animation: fadeUp 0.5s 0.20s ease both; }
     .card:nth-child(3) { animation: fadeUp 0.5s 0.25s ease both; }
-    .card:nth-child(4) { animation: fadeUp 0.5s 0.3s ease both; }
-    .card-placeholder { animation: fadeUp 0.5s 0.35s ease both; }
+    .card:nth-child(4) { animation: fadeUp 0.5s 0.30s ease both; }
+    .card:nth-child(5) { animation: fadeUp 0.5s 0.35s ease both; }
+    .card-placeholder  { animation: fadeUp 0.5s 0.40s ease both; }
   </style>
 </head>
 <body>
@@ -279,7 +271,6 @@
 
     <div class="grid">
 
-      <!-- CARD 1: Edit the href, title, desc, and tag for each artifact -->
       <a class="card" href="5-whys-practice.html">
         <div class="card-icon">🔍</div>
         <div class="card-title">5 Whys Practice</div>
@@ -293,6 +284,30 @@
         <div class="card-title">Fishbone Builder Tool</div>
         <div class="card-desc">Visual cause-and-effect diagram for identifying root causes of a problem.</div>
         <div class="card-tag">Problem Solving</div>
+        <div class="card-arrow">→</div>
+      </a>
+
+      <a class="card" href="thermoforming-onboarding.html">
+        <div class="card-icon">🏭</div>
+        <div class="card-title">Thermoforming Onboarding</div>
+        <div class="card-desc">Interactive introduction to thermoforming processes, safety, and production standards for new hires.</div>
+        <div class="card-tag">Onboarding</div>
+        <div class="card-arrow">→</div>
+      </a>
+
+      <a class="card" href="defensive_driving_training.html">
+        <div class="card-icon">🚗</div>
+        <div class="card-title">Defensive Driving</div>
+        <div class="card-desc">Required defensive driving training for all authorized drivers under the company Driving Policy.</div>
+        <div class="card-tag">Safety & Compliance</div>
+        <div class="card-arrow">→</div>
+      </a>
+
+      <a class="card" href="sipde-scenario.html">
+        <div class="card-icon">🎯</div>
+        <div class="card-title">SIPDE: Interactive Scenario</div>
+        <div class="card-desc">Step through a real intersection scenario using the SIPDE method — Scan, Identify, Predict, Decide, Execute.</div>
+        <div class="card-tag">Safety & Compliance</div>
         <div class="card-arrow">→</div>
       </a>
 
